@@ -37,12 +37,10 @@ public class AnimationsManager extends SimpleJsonResourceReloadListener {
             var json = j.getValue();
             var id = j.getKey();
 
-            AnimationParameters effect = AnimationParameters.CODEC.decode(JsonOps.INSTANCE, json)
-                    .getOrThrow(false, errorMsg ->
-                            AGoodPlace.LOGGER.warn("Could not decode Block Placement Animation with json id {} - error: {} - json: {}", id, errorMsg, j))
-                    .getFirst();
-
-            ANIMATIONS.add(effect);
+            var result = AnimationParameters.CODEC.decode(JsonOps.INSTANCE, json)
+                    .resultOrPartial(errorMsg ->
+                            AGoodPlace.LOGGER.warn("Could not decode Block Placement Animation with json id {} - error: {} - json: {}", id, errorMsg, j));
+            result.ifPresent(pair -> ANIMATIONS.add(pair.getFirst()));
         }
         ANIMATIONS.sort((a, b) -> Integer.compare(b.priority(), a.priority()));
 

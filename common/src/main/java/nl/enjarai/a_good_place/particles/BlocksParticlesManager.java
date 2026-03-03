@@ -1,11 +1,9 @@
 package nl.enjarai.a_good_place.particles;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -107,34 +105,9 @@ public class BlocksParticlesManager {
     }
 
     public static void renderParticles(PoseStack poseStack, float tickDelta) {
+        // RENDER_AS_VANILLA_PARTICLES is true by default; this alternative path requires
+        // RenderSystem.getModelViewStack() which was removed in 1.21.1.
         if (AGoodPlace.RENDER_AS_VANILLA_PARTICLES || PARTICLES.isEmpty()) return;
-
-        poseStack.pushPose();
-
-        Minecraft mc = Minecraft.getInstance();
-        Camera camera = mc.gameRenderer.getMainCamera();
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-
-        // lightTexture.turnOnLightLayer();
-        RenderSystem.enableDepthTest();
-        PoseStack poseStack2 = RenderSystem.getModelViewStack();
-        poseStack2.pushPose();
-        poseStack2.mulPoseMatrix(poseStack.last().pose());
-        RenderSystem.applyModelViewMatrix();
-
-        for (var p : PARTICLES.values()) {
-            p.render(null, camera, tickDelta);
-        }
-        bufferSource.endBatch();
-
-
-        poseStack2.popPose();
-        RenderSystem.applyModelViewMatrix();
-        RenderSystem.depthMask(true);
-        RenderSystem.disableBlend();
-        // lightTexture.turnOffLightLayer();
-
-        poseStack.popPose();
     }
 
     public static void modifyTilePosition(BlockPos pos, PoseStack pose, float partialTicks) {

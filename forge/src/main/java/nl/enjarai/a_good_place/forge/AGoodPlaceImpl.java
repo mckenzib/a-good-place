@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PackCompatibility;
 import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
@@ -19,32 +20,33 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.RenderTypeHelper;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.data.loading.DatagenModLoader;
-import net.minecraftforge.event.AddPackFindersEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.forgespi.locating.IModFile;
-import net.minecraftforge.resource.PathPackResources;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.RenderTypeHelper;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.data.loading.DatagenModLoader;
+import net.neoforged.neoforge.event.AddPackFindersEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.forgespi.locating.IModFile;
+import net.neoforged.neoforge.resource.PathPackResources;
 import nl.enjarai.a_good_place.AGoodPlace;
 import nl.enjarai.a_good_place.pack.AnimationsManager;
 import nl.enjarai.a_good_place.pack.state_tests.BlockStatePredicateType;
 import nl.enjarai.a_good_place.particles.BlocksParticlesManager;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -54,19 +56,18 @@ import java.util.function.Supplier;
 public class AGoodPlaceImpl {
     public static final String MOD_ID = AGoodPlace.MOD_ID;
 
-    public AGoodPlaceImpl() {
+    public AGoodPlaceImpl(IEventBus modEventBus) {
         if (FMLEnvironment.dist == Dist.CLIENT) {
 
-            FMLJavaModLoadingContext.get().getModEventBus()
-                            .addListener(this::onSetup);
+            modEventBus.addListener(this::onSetup);
 
-            addClientReloadListener(AnimationsManager::new, AGoodPlace.res("animations"));
+            addClientReloadListener(AnimationsManager::new, AGoodPlace.res("animations"), modEventBus);
 
             boolean firstInstall = AGoodPlace.copySamplePackIfNotPresent();
-            MinecraftForge.EVENT_BUS.register(this);
+            NeoForge.EVENT_BUS.register(this);
 
             registerOptionalTexturePack(AGoodPlace.res("default_animations"),
-                    Component.nullToEmpty("Default Place Animations"), firstInstall);
+                    Component.nullToEmpty("Default Place Animations"), firstInstall, modEventBus);
 
             BlockStatePredicateType.init();
             AGoodPlace.IS_DEV = !FMLLoader.isProduction();
@@ -92,14 +93,14 @@ public class AGoodPlaceImpl {
     @SubscribeEvent
     public void onRenderWorld(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
-            BlocksParticlesManager.renderParticles(event.getPoseStack(), event.getPartialTick());
+            BlocksParticlesManager.renderParticles(event.getPoseStack(), event.getPartialTick().getGameTimeDeltaPartialTick(false));
         }
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.LevelTickEvent tickEvent) {
-        if (tickEvent.phase == TickEvent.Phase.END && tickEvent.level.isClientSide) {
-            BlocksParticlesManager.tickParticles((ClientLevel) tickEvent.level);
+    public void onClientTick(LevelTickEvent.Post tickEvent) {
+        if (tickEvent.getLevel().isClientSide()) {
+            BlocksParticlesManager.tickParticles((ClientLevel) tickEvent.getLevel());
         }
     }
 
@@ -113,14 +114,14 @@ public class AGoodPlaceImpl {
         }
     }
 
-    public static void addClientReloadListener(Supplier<PreparableReloadListener> listener, ResourceLocation location) {
+    public static void addClientReloadListener(Supplier<PreparableReloadListener> listener, ResourceLocation location, IEventBus modEventBus) {
         Consumer<RegisterClientReloadListenersEvent> eventConsumer = (event) -> {
             event.registerReloadListener(listener.get());
         };
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(eventConsumer);
+        modEventBus.addListener(eventConsumer);
     }
 
-    public static void registerOptionalTexturePack(ResourceLocation folderName, Component displayName, boolean defaultEnabled) {
+    public static void registerOptionalTexturePack(ResourceLocation folderName, Component displayName, boolean defaultEnabled, IEventBus modEventBus) {
         registerResourcePack(PackType.CLIENT_RESOURCES,
                 () -> {
                     IModFile file = ModList.get().getModFileById(folderName.getNamespace()).getFile();
@@ -134,7 +135,7 @@ public class AGoodPlaceImpl {
                                 displayName,
                                 defaultEnabled,
                                 (s) -> pack,
-                                new Pack.Info(metadata.getDescription(), metadata.getPackFormat(), FeatureFlagSet.of()),
+                                new Pack.Info(metadata.getDescription(), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
                                 PackType.CLIENT_RESOURCES,
                                 Pack.Position.TOP,
                                 false,
@@ -143,13 +144,13 @@ public class AGoodPlaceImpl {
                         if (!DatagenModLoader.isRunningDataGen()) ee.printStackTrace();
                     }
                     return null;
-                }
+                },
+                modEventBus
         );
     }
 
-    public static void registerResourcePack(PackType packType, @Nullable Supplier<Pack> packSupplier) {
+    public static void registerResourcePack(PackType packType, @Nullable Supplier<Pack> packSupplier, IEventBus modEventBus) {
         if (packSupplier == null) return;
-        var bus = FMLJavaModLoadingContext.get().getModEventBus();
         Consumer<AddPackFindersEvent> consumer = event -> {
             if (event.getPackType() == packType) {
                 var p = packSupplier.get();
@@ -158,7 +159,7 @@ public class AGoodPlaceImpl {
                 }
             }
         };
-        bus.addListener(consumer);
+        modEventBus.addListener(consumer);
     }
 
 
