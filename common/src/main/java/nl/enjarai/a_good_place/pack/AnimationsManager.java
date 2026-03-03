@@ -1,12 +1,10 @@
 package nl.enjarai.a_good_place.pack;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.FileToIdConverter;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -21,27 +19,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class AnimationsManager extends SimpleJsonResourceReloadListener {
+public class AnimationsManager extends SimpleJsonResourceReloadListener<AnimationParameters> {
 
     private static final List<AnimationParameters> ANIMATIONS = new ArrayList<>();
 
     public AnimationsManager() {
-        super(new Gson(), "placement_animations");
+        super(AnimationParameters.CODEC, FileToIdConverter.json("placement_animations"));
     }
 
     @Override
-    protected void apply(Map<ResourceLocation, JsonElement> jsons, ResourceManager resourceManager, ProfilerFiller profiler) {
+    protected void apply(Map<Identifier, AnimationParameters> prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
         ANIMATIONS.clear();
-
-        for (var j : jsons.entrySet()) {
-            var json = j.getValue();
-            var id = j.getKey();
-
-            var result = AnimationParameters.CODEC.decode(JsonOps.INSTANCE, json)
-                    .resultOrPartial(errorMsg ->
-                            AGoodPlace.LOGGER.warn("Could not decode Block Placement Animation with json id {} - error: {} - json: {}", id, errorMsg, j));
-            result.ifPresent(pair -> ANIMATIONS.add(pair.getFirst()));
-        }
+        ANIMATIONS.addAll(prepared.values());
         ANIMATIONS.sort((a, b) -> Integer.compare(b.priority(), a.priority()));
 
         var level = Minecraft.getInstance().level;

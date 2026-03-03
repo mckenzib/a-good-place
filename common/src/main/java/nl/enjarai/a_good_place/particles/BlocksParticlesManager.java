@@ -41,7 +41,7 @@ public class BlocksParticlesManager {
         if (param != null) {
             Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
 
-            if (camera.getPosition().distanceToSqr(pos.getCenter()) <= 1024.0) {
+            if (camera.position().distanceToSqr(pos.getCenter()) <= 1024.0) {
                 var p = new ConfiguredPlacingParticle(level, pos, face, player, hand, param);
 
                 var old = PARTICLES.put(pos, p);
@@ -105,9 +105,13 @@ public class BlocksParticlesManager {
     }
 
     public static void renderParticles(PoseStack poseStack, float tickDelta) {
-        // RENDER_AS_VANILLA_PARTICLES is true by default; this alternative path requires
-        // RenderSystem.getModelViewStack() which was removed in 1.21.1.
-        if (AGoodPlace.RENDER_AS_VANILLA_PARTICLES || PARTICLES.isEmpty()) return;
+        if (PARTICLES.isEmpty()) return;
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        for (var p : PARTICLES.values()) {
+            if (p.isAlive()) {
+                p.render(camera, tickDelta);
+            }
+        }
     }
 
     public static void modifyTilePosition(BlockPos pos, PoseStack pose, float partialTicks) {
