@@ -4,7 +4,7 @@
 
 ### Prerequisites
 - Java 21 or later
-- Minecraft Java Edition 1.21.1
+- Minecraft Java Edition 1.21.11
 
 ### Option 1: Build and install manually
 
@@ -17,7 +17,7 @@
    ```
 2. Find the built jar in `fabric/build/libs/` or `forge/build/libs/` — use the file **without** `-dev` or `-sources` in the name.
 3. Drop the jar into your Minecraft `mods/` folder alongside [Fabric Loader 0.16.5+](https://fabricmc.net/use/installer/) + [Fabric API 0.116.9+1.21.1](https://modrinth.com/mod/fabric-api) (Fabric), or [NeoForge 21.1.x](https://neoforged.net/) (NeoForge).
-4. Launch Minecraft 1.21.1.
+4. Launch Minecraft 1.21.11.
 
 ### Option 2: Run directly from the repo (dev environment)
 
