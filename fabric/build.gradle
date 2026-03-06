@@ -33,7 +33,7 @@ dependencies {
     // Sodium - optional compile dependency for Sodium compat mixins (@Pseudo)
     modCompileOnly("maven.modrinth:sodium:mc1.21.11-0.8.4-fabric")
 
-     modImplementation ("curse.maven:continuity-531351:5962874")
+    // modImplementation ("curse.maven:continuity-531351:5962874") // TODO: update to 1.21.11-compatible version
 }
 
 

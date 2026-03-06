@@ -19,9 +19,23 @@ public abstract class RebuildTaskMixin {
                     target = "Lnet/minecraft/world/level/block/state/BlockState;getRenderShape()Lnet/minecraft/world/level/block/RenderShape;"
             )
     )
-    private RenderShape wonkyblock$hideBlock(RenderShape original, @Local BlockPos blockPos) {
+    private RenderShape wonkyblock$hideBlock(RenderShape original, @Local(ordinal = 2) BlockPos blockPos) {
         if (original != RenderShape.INVISIBLE && BlocksParticlesManager.isBlockHidden(blockPos)) {
             return RenderShape.INVISIBLE;
+        }
+        return original;
+    }
+
+    @ModifyExpressionValue(
+            method = "compile",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;isSolidRender()Z"
+            )
+    )
+    private boolean wonkyblock$overrideSolidRender(boolean original, @Local(ordinal = 2) BlockPos blockPos) {
+        if (original && BlocksParticlesManager.isBlockHidden(blockPos)) {
+            return false;
         }
         return original;
     }
