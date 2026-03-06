@@ -5,7 +5,6 @@ plugins {
 architectury {
     platformSetupLoomIde()
     neoForge()
-    neoForge()
 }
 
 
@@ -18,7 +17,6 @@ configurations {
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
-    developmentNeoForge.extendsFrom common
     developmentNeoForge.extendsFrom common
 }
 
@@ -117,14 +115,10 @@ repositories{
 
 dependencies {
     neoForge "net.neoforged:neoforge:${neo_version}"
-    neoForge "net.neoforged:neoforge:${neo_version}"
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive = false }
-    shadowCommon(project(path: ":common", configuration: "transformProductionNeoForge")) { transitive = false }
 
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
-    implementation(include("io.github.llamalad7:mixinextras-neoforge:${mixin_extras_version}"))
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
     implementation(include("io.github.llamalad7:mixinextras-neoforge:${mixin_extras_version}"))
 
@@ -132,6 +126,5 @@ dependencies {
     // The modrinth jar uses jarjar; extract the core jar for compilation
     compileOnly files("libs/sodium-neoforge-core.jar")
 
-    implementation 'org.jetbrains:annotations:24.0.0'
     implementation 'org.jetbrains:annotations:24.0.0'
 }

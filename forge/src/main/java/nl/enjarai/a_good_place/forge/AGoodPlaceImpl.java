@@ -1,6 +1,7 @@
 package nl.enjarai.a_good_place.forge;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -9,16 +10,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -26,8 +26,8 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.loading.DatagenModLoader;
@@ -55,17 +55,13 @@ public class AGoodPlaceImpl {
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
 
             modEventBus.addListener(this::onSetup);
-            modEventBus.addListener(this::onSetup);
 
-            addClientReloadListener(AnimationsManager::new, AGoodPlace.res("animations"), modEventBus);
             addClientReloadListener(AnimationsManager::new, AGoodPlace.res("animations"), modEventBus);
 
             boolean firstInstall = AGoodPlace.copySamplePackIfNotPresent();
             NeoForge.EVENT_BUS.register(this);
-            NeoForge.EVENT_BUS.register(this);
 
             registerOptionalTexturePack(AGoodPlace.res("default_animations"),
-                    Component.nullToEmpty("Default Place Animations"), firstInstall, modEventBus);
                     Component.nullToEmpty("Default Place Animations"), firstInstall, modEventBus);
 
             BlockStatePredicateType.init();
@@ -98,9 +94,6 @@ public class AGoodPlaceImpl {
     public void onClientTick(LevelTickEvent.Post tickEvent) {
         if (tickEvent.getLevel().isClientSide()) {
             BlocksParticlesManager.tickParticles((ClientLevel) tickEvent.getLevel());
-    public void onClientTick(LevelTickEvent.Post tickEvent) {
-        if (tickEvent.getLevel().isClientSide()) {
-            BlocksParticlesManager.tickParticles((ClientLevel) tickEvent.getLevel());
         }
     }
 
@@ -113,7 +106,6 @@ public class AGoodPlaceImpl {
         Consumer<AddClientReloadListenersEvent> eventConsumer = (event) -> {
             event.addListener(location, listener.get());
         };
-        modEventBus.addListener(eventConsumer);
         modEventBus.addListener(eventConsumer);
     }
 
@@ -139,12 +131,9 @@ public class AGoodPlaceImpl {
                     return null;
                 },
                 modEventBus
-                },
-                modEventBus
         );
     }
 
-    public static void registerResourcePack(PackType packType, @Nullable Supplier<Pack> packSupplier, IEventBus modEventBus) {
     public static void registerResourcePack(PackType packType, @Nullable Supplier<Pack> packSupplier, IEventBus modEventBus) {
         if (packSupplier == null) return;
         Consumer<AddPackFindersEvent> consumer = event -> {
@@ -155,7 +144,6 @@ public class AGoodPlaceImpl {
                 }
             }
         };
-        modEventBus.addListener(consumer);
         modEventBus.addListener(consumer);
     }
 
