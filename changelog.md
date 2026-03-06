@@ -1,3 +1,6 @@
+## 1.21.11-1.2.8
+- Updated to Minecraft 1.21.11 ("Mounts of Mayhem")
+
 ## 1.21.1-1.2.8
 - Updated to Minecraft 1.21.1
 - Migrated from Forge to NeoForge
